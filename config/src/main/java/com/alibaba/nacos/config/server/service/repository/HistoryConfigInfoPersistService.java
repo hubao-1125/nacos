@@ -18,12 +18,12 @@ package com.alibaba.nacos.config.server.service.repository;
 
 import com.alibaba.nacos.config.server.model.ConfigHistoryInfo;
 import com.alibaba.nacos.config.server.model.ConfigInfo;
-import com.alibaba.nacos.persistence.model.Page;
+import com.alibaba.nacos.config.server.model.ConfigInfoStateWrapper;
+import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.persistence.repository.PaginationHelper;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Database service, providing access to his_config_info in the database.
@@ -40,28 +40,24 @@ public interface HistoryConfigInfoPersistService {
      */
     <E> PaginationHelper<E> createPaginationHelper();
     
-    /**
-     * Convert delete config.
-     *
-     * @param list origin data
-     * @return {@link ConfigInfo} list
-     */
-    List<ConfigInfo> convertDeletedConfig(List<Map<String, Object>> list);
-    
     //------------------------------------------insert---------------------------------------------//
     
     /**
      * Update change records; database atomic operations, minimal sql actions, no business encapsulation.
      *
-     * @param id         id
-     * @param configInfo config info
-     * @param srcIp      ip
-     * @param srcUser    user
-     * @param time       time
-     * @param ops        ops type
+     * @param id          id
+     * @param configInfo  config info
+     * @param srcIp       ip
+     * @param srcUser     user
+     * @param time        time
+     * @param ops         ops type
+     * @param publishType publish type
+     * @param grayName    gray name
+     * @param extInfo     extra config info
      */
-    void insertConfigHistoryAtomic(long id, ConfigInfo configInfo, String srcIp, String srcUser, final Timestamp time,
-            String ops);
+    void insertConfigHistoryAtomic(long id, ConfigInfo configInfo, String srcIp, String srcUser,
+        final Timestamp time,
+        String ops, String publishType, String grayName, String extInfo);
     //------------------------------------------delete---------------------------------------------//
     
     /**
@@ -77,11 +73,15 @@ public interface HistoryConfigInfoPersistService {
     /**
      * Query deleted config.
      *
-     * @param startTime start time
-     * @param endTime   end time
-     * @return {@link ConfigInfo} list
+     * @param startTime   start time
+     * @param startId     last max id
+     * @param size        page size
+     * @param publishType publish type
+     * @return {@link ConfigInfoStateWrapper} list
      */
-    List<ConfigInfo> findDeletedConfig(final Timestamp startTime, final Timestamp endTime);
+    List<ConfigInfoStateWrapper> findDeletedConfig(final Timestamp startTime, final long startId,
+        int size,
+        String publishType);
     
     /**
      * List configuration history change record.
@@ -93,7 +93,8 @@ public interface HistoryConfigInfoPersistService {
      * @param pageSize size
      * @return {@link Page} with {@link ConfigHistoryInfo} generation
      */
-    Page<ConfigHistoryInfo> findConfigHistory(String dataId, String group, String tenant, int pageNo, int pageSize);
+    Page<ConfigHistoryInfo> findConfigHistory(String dataId, String group, String tenant,
+        int pageNo, int pageSize);
     
     /**
      * Get history config detail.
@@ -119,4 +120,19 @@ public interface HistoryConfigInfoPersistService {
      */
     @Deprecated
     int findConfigHistoryCountByTime(final Timestamp startTime);
+    
+    /**
+     * Get the next history config detail of the history config.
+     *
+     * @param dataId      data Id
+     * @param group       group
+     * @param tenant      tenant
+     * @param publishType publish type
+     * @param grayName    gray name
+     * @param startNid    start nid
+     * @return the next history config detail of the history config
+     */
+    ConfigHistoryInfo getNextHistoryInfo(String dataId, String group, String tenant,
+        String publishType, String grayName,
+        long startNid);
 }

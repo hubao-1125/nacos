@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -64,13 +65,13 @@ public class MapperManager {
     /**
      * The init method.
      */
-    public void loadInitial() {
+    public synchronized void loadInitial() {
         Collection<Mapper> mappers = NacosServiceLoader.load(Mapper.class);
         for (Mapper mapper : mappers) {
-            Map<String, Mapper> mapperMap = MAPPER_SPI_MAP.computeIfAbsent(mapper.getDataSource(), (r) -> new HashMap<>(16));
-            mapperMap.put(mapper.getTableName(), mapper);
-            LOGGER.info("[MapperManager] Load Mapper({}) datasource({}) tableName({}) successfully.",
-                    mapper.getClass(), mapper.getDataSource(), mapper.getTableName());
+            putMapper(mapper);
+            LOGGER.info(
+                "[MapperManager] Load Mapper({}) datasource({}) tableName({}) successfully.",
+                mapper.getClass(), mapper.getDataSource(), mapper.getTableName());
         }
     }
     
@@ -82,10 +83,14 @@ public class MapperManager {
         if (Objects.isNull(mapper)) {
             return;
         }
-        Map<String, Mapper> mapperMap = MAPPER_SPI_MAP.getOrDefault(mapper.getDataSource(), new HashMap<>(16));
-        mapperMap.put(mapper.getTableName(), mapper);
-        MAPPER_SPI_MAP.put(mapper.getDataSource(), mapperMap);
-        LOGGER.warn("[MapperManager] join successfully.");
+        putMapper(mapper);
+        LOGGER.info("[MapperManager] join successfully.");
+    }
+    
+    private static void putMapper(Mapper mapper) {
+        Map<String, Mapper> mapperMap =
+            MAPPER_SPI_MAP.computeIfAbsent(mapper.getDataSource(), key -> new HashMap<>(16));
+        mapperMap.putIfAbsent(mapper.getTableName(), mapper);
     }
     
     /**
@@ -96,23 +101,36 @@ public class MapperManager {
      * @return mapper.
      */
     public <R extends Mapper> R findMapper(String dataSource, String tableName) {
-        LOGGER.info("[MapperManager] findMapper dataSource: {}, tableName: {}", dataSource, tableName);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[MapperManager] findMapper dataSource: {}, tableName: {}", dataSource,
+                tableName);
+        }
         if (StringUtils.isBlank(dataSource) || StringUtils.isBlank(tableName)) {
-            throw new NacosRuntimeException(FIND_DATASOURCE_ERROR_CODE, "dataSource or tableName is null");
+            throw new NacosRuntimeException(FIND_DATASOURCE_ERROR_CODE,
+                "dataSource or tableName is null");
         }
         Map<String, Mapper> tableMapper = MAPPER_SPI_MAP.get(dataSource);
         if (Objects.isNull(tableMapper)) {
             throw new NacosRuntimeException(FIND_DATASOURCE_ERROR_CODE,
-                    "[MapperManager] Failed to find the datasource,dataSource:" + dataSource);
+                "[MapperManager] Failed to find the datasource,dataSource:" + dataSource);
         }
         Mapper mapper = tableMapper.get(tableName);
         if (Objects.isNull(mapper)) {
             throw new NacosRuntimeException(FIND_TABLE_ERROR_CODE,
-                    "[MapperManager] Failed to find the table ,tableName:" + tableName);
+                "[MapperManager] Failed to find the table ,tableName:" + tableName);
         }
         if (dataSourceLogEnable) {
-            return (R) MapperProxy.createSingleProxy(mapper);
+            return MapperProxy.createSingleProxy(mapper);
         }
         return (R) mapper;
+    }
+    
+    /**
+     * Get all mappers.
+     *
+     * @return unmodifiable map of all mappers
+     */
+    public Map<String, Map<String, Mapper>> getAllMappers() {
+        return Collections.unmodifiableMap(MAPPER_SPI_MAP);
     }
 }

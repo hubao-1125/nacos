@@ -16,20 +16,18 @@
 
 package com.alibaba.nacos.config.server.service.repository;
 
+import com.alibaba.nacos.api.config.model.SameConfigPolicy;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.config.server.model.ConfigAdvanceInfo;
 import com.alibaba.nacos.config.server.model.ConfigAllInfo;
 import com.alibaba.nacos.config.server.model.ConfigInfo;
 import com.alibaba.nacos.config.server.model.ConfigInfoBase;
 import com.alibaba.nacos.config.server.model.ConfigInfoStateWrapper;
 import com.alibaba.nacos.config.server.model.ConfigInfoWrapper;
-import com.alibaba.nacos.config.server.model.ConfigKey;
 import com.alibaba.nacos.config.server.model.ConfigOperateResult;
-import com.alibaba.nacos.persistence.model.Page;
-import com.alibaba.nacos.config.server.model.SameConfigPolicy;
 import com.alibaba.nacos.persistence.repository.PaginationHelper;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +41,6 @@ public interface ConfigInfoPersistService {
     
     String PATTERN_STR = "*";
     Object[] EMPTY_ARRAY = new Object[] {};
-    
     
     /**
      * create Pagination utils.
@@ -63,7 +60,6 @@ public interface ConfigInfoPersistService {
     
     //------------------------------------------insert---------------------------------------------//
     
-    
     /**
      * Add common configuration information and publish data change events.
      *
@@ -73,8 +69,24 @@ public interface ConfigInfoPersistService {
      * @param configAdvanceInfo advance info
      * @return config operation result.
      */
-    ConfigOperateResult addConfigInfo(final String srcIp, final String srcUser, final ConfigInfo configInfo,
-            final Map<String, Object> configAdvanceInfo);
+    ConfigOperateResult addConfigInfo(final String srcIp, final String srcUser,
+        final ConfigInfo configInfo,
+        final Map<String, Object> configAdvanceInfo);
+    
+    /**
+     * Update config info metadata config operate result.
+     *
+     * @param dataId      the data id
+     * @param group       the group
+     * @param tenant      the tenant
+     * @param configTags  the config tags
+     * @param description the description
+     * @return the config operate result
+     * @throws NacosException the nacos exception
+     */
+    ConfigOperateResult updateConfigInfoMetadata(final String dataId, final String group,
+        final String tenant,
+        final String configTags, final String description) throws NacosException;
     
     /**
      * insert or update.
@@ -86,7 +98,7 @@ public interface ConfigInfoPersistService {
      * @return config operation result.
      */
     ConfigOperateResult insertOrUpdate(String srcIp, String srcUser, ConfigInfo configInfo,
-            Map<String, Object> configAdvanceInfo);
+        Map<String, Object> configAdvanceInfo);
     
     /**
      * Write to the main table, insert or update cas.
@@ -98,7 +110,7 @@ public interface ConfigInfoPersistService {
      * @return success or not.
      */
     ConfigOperateResult insertOrUpdateCas(String srcIp, String srcUser, ConfigInfo configInfo,
-            Map<String, Object> configAdvanceInfo);
+        Map<String, Object> configAdvanceInfo);
     
     /**
      * Add configuration; database atomic operation, minimum sql action, no business encapsulation.
@@ -110,8 +122,9 @@ public interface ConfigInfoPersistService {
      * @param configAdvanceInfo advance info
      * @return execute sql result
      */
-    long addConfigInfoAtomic(final long id, final String srcIp, final String srcUser, final ConfigInfo configInfo,
-            Map<String, Object> configAdvanceInfo);
+    long addConfigInfoAtomic(final long id, final String srcIp, final String srcUser,
+        final ConfigInfo configInfo,
+        Map<String, Object> configAdvanceInfo);
     
     /**
      * Add configuration; database atomic operation, minimum sql action, no business encapsulation.
@@ -122,7 +135,8 @@ public interface ConfigInfoPersistService {
      * @param group    group
      * @param tenant   tenant
      */
-    void addConfigTagRelationAtomic(long configId, String tagName, String dataId, String group, String tenant);
+    void addConfigTagRelationAtomic(long configId, String tagName, String dataId, String group,
+        String tenant);
     
     /**
      * Add configuration; database atomic operation.
@@ -133,7 +147,8 @@ public interface ConfigInfoPersistService {
      * @param group      group
      * @param tenant     tenant
      */
-    void addConfigTagsRelation(long configId, String configTags, String dataId, String group, String tenant);
+    void addConfigTagsRelation(long configId, String configTags, String dataId, String group,
+        String tenant);
     
     /**
      * batch operation,insert or update the format of the returned: succCount: number of successful imports skipCount:
@@ -148,8 +163,9 @@ public interface ConfigInfoPersistService {
      * @return map containing the number of affected rows
      * @throws NacosException nacos exception
      */
-    Map<String, Object> batchInsertOrUpdate(List<ConfigAllInfo> configInfoList, String srcUser, String srcIp,
-            Map<String, Object> configAdvanceInfo, SameConfigPolicy policy) throws NacosException;
+    Map<String, Object> batchInsertOrUpdate(List<ConfigAllInfo> configInfoList, String srcUser,
+        String srcIp,
+        Map<String, Object> configAdvanceInfo, SameConfigPolicy policy) throws NacosException;
     
     //------------------------------------------delete---------------------------------------------//
     
@@ -162,8 +178,9 @@ public interface ConfigInfoPersistService {
      * @param srcIp   remote ip
      * @param srcUser user
      */
-    void removeConfigInfo(final String dataId, final String group, final String tenant, final String srcIp,
-            final String srcUser);
+    void removeConfigInfo(final String dataId, final String group, final String tenant,
+        final String srcIp,
+        final String srcUser);
     
     /**
      * Delete config info by ids.
@@ -171,10 +188,12 @@ public interface ConfigInfoPersistService {
      * @param ids     id list
      * @param srcIp   remote ip
      * @param srcUser user
-     * @return {@link ConfigInfo} list
+     * @return {@link ConfigAllInfo} list
      * @author klw
      */
-    List<ConfigInfo> removeConfigInfoByIds(final List<Long> ids, final String srcIp, final String srcUser);
+    @Deprecated
+    List<ConfigAllInfo> removeConfigInfoByIds(final List<Long> ids, final String srcIp,
+        final String srcUser);
     
     /**
      * Delete tag.
@@ -192,8 +211,9 @@ public interface ConfigInfoPersistService {
      * @param srcIp   ip
      * @param srcUser user
      */
-    void removeConfigInfoAtomic(final String dataId, final String group, final String tenant, final String srcIp,
-            final String srcUser);
+    void removeConfigInfoAtomic(final String dataId, final String group, final String tenant,
+        final String srcIp,
+        final String srcUser);
     
     /**
      * Remove configuration; database atomic operation, minimum SQL action, no business encapsulation.
@@ -213,8 +233,9 @@ public interface ConfigInfoPersistService {
      * @param configAdvanceInfo advance info
      * @return config operation result.
      */
-    ConfigOperateResult updateConfigInfo(final ConfigInfo configInfo, final String srcIp, final String srcUser,
-            final Map<String, Object> configAdvanceInfo);
+    ConfigOperateResult updateConfigInfo(final ConfigInfo configInfo, final String srcIp,
+        final String srcUser,
+        final Map<String, Object> configAdvanceInfo);
     
     /**
      * Update common configuration information.
@@ -225,8 +246,9 @@ public interface ConfigInfoPersistService {
      * @param configAdvanceInfo advance info
      * @return config operation result.
      */
-    ConfigOperateResult updateConfigInfoCas(final ConfigInfo configInfo, final String srcIp, final String srcUser,
-            final Map<String, Object> configAdvanceInfo);
+    ConfigOperateResult updateConfigInfoCas(final ConfigInfo configInfo, final String srcIp,
+        final String srcUser,
+        final Map<String, Object> configAdvanceInfo);
     
     /**
      * Update configuration; database atomic operation, minimum SQL action, no business encapsulation.
@@ -236,19 +258,9 @@ public interface ConfigInfoPersistService {
      * @param srcUser           user
      * @param configAdvanceInfo advance info
      */
-    void updateConfigInfoAtomic(final ConfigInfo configInfo, final String srcIp, final String srcUser,
-            Map<String, Object> configAdvanceInfo);
-    
-    /**
-     * update md5.
-     *
-     * @param dataId   data id
-     * @param group    group
-     * @param tenant   tenant
-     * @param md5      md5
-     * @param lastTime last modified time
-     */
-    void updateMd5(String dataId, String group, String tenant, String md5, Timestamp lastTime);
+    void updateConfigInfoAtomic(final ConfigInfo configInfo, final String srcIp,
+        final String srcUser,
+        Map<String, Object> configAdvanceInfo);
     
     //------------------------------------------select---------------------------------------------//
     
@@ -258,23 +270,6 @@ public interface ConfigInfoPersistService {
      * @return config max id
      */
     long findConfigMaxId();
-    
-    /**
-     * Find all dataId and group. It is guaranteed not to return NULL.
-     *
-     * @return {@link com.alibaba.nacos.config.server.Config} list
-     */
-    @Deprecated
-    List<ConfigInfo> findAllDataIdAndGroup();
-    
-    /**
-     * Query configuration information based on dataId and group.
-     *
-     * @param dataId data id
-     * @param group  group
-     * @return {@link ConfigInfoBase}
-     */
-    ConfigInfoBase findConfigInfoBase(final String dataId, final String group);
     
     /**
      * Query configuration information by primary key ID.
@@ -305,30 +300,9 @@ public interface ConfigInfoPersistService {
      * @param configAdvanceInfo advance info
      * @return {@link Page} with {@link ConfigInfo} generation
      */
-    Page<ConfigInfo> findConfigInfo4Page(final int pageNo, final int pageSize, final String dataId, final String group,
-            final String tenant, final Map<String, Object> configAdvanceInfo);
-    
-    /**
-     * Query configuration information based on group.
-     *
-     * @param pageNo   Page number (must be greater than 0)
-     * @param pageSize Page size (must be greater than 0)
-     * @param tenant   tenant
-     * @param appName  app name
-     * @return {@link Page} with {@link ConfigInfo} generation
-     */
-    Page<ConfigInfo> findConfigInfoByApp(final int pageNo, final int pageSize, final String tenant,
-            final String appName);
-    
-    /**
-     * Query configuration information based on group.
-     *
-     * @param pageNo   Page number (must be greater than 0)
-     * @param pageSize Page size (must be greater than 0)
-     * @param group    group
-     * @return {@link Page} with {@link ConfigInfoBase} generation
-     */
-    Page<ConfigInfoBase> findConfigInfoBaseByGroup(final int pageNo, final int pageSize, final String group);
+    Page<ConfigInfo> findConfigInfo4Page(final int pageNo, final int pageSize, final String dataId,
+        final String group,
+        final String tenant, final Map<String, Object> configAdvanceInfo);
     
     /**
      * Returns the number of configuration items.
@@ -364,45 +338,15 @@ public interface ConfigInfoPersistService {
     List<String> getGroupIdList(int page, int pageSize);
     
     /**
-     * Query all configuration information by page.
-     *
-     * @param pageNo   Page number (starting at 1)
-     * @param pageSize Page size (must be greater than 0)
-     * @param tenant   tenant
-     * @return {@link Page} with {@link ConfigInfo} generation
-     */
-    Page<ConfigInfo> findAllConfigInfo(final int pageNo, final int pageSize, final String tenant);
-    
-    /**
-     * Query all configuration information by page.
-     *
-     * @param pageNo   Page number (starting at 1)
-     * @param pageSize Page size (must be greater than 0)
-     * @param tenant   tenant
-     * @return {@link Page} with {@link ConfigKey} generation
-     */
-    Page<ConfigKey> findAllConfigKey(final int pageNo, final int pageSize, final String tenant);
-    
-    /**
      * Query all config info.
      *
-     * @param lastMaxId last max id
-     * @param pageSize  page size
+     * @param lastMaxId   last max id
+     * @param pageSize    page size
+     * @param needContent need content or not.
      * @return {@link Page} with {@link ConfigInfoWrapper} generation
      */
-    Page<ConfigInfoWrapper> findAllConfigInfoFragment(final long lastMaxId, final int pageSize);
-    
-    /**
-     * Fuzzy query configuration information based on dataId and group.
-     *
-     * @param pageNo     Page number (must be greater than 0)
-     * @param pageSize   Page size (must be greater than 0)
-     * @param configKeys Query configuration list
-     * @param blacklist  Whether to blacklist
-     * @return {@link Page} with {@link ConfigInfo} generation
-     */
-    Page<ConfigInfo> findConfigInfoLike(final int pageNo, final int pageSize, final ConfigKey[] configKeys,
-            final boolean blacklist);
+    Page<ConfigInfoWrapper> findAllConfigInfoFragment(final long lastMaxId, final int pageSize,
+        boolean needContent);
     
     /**
      * Query config info.
@@ -415,49 +359,20 @@ public interface ConfigInfoPersistService {
      * @param configAdvanceInfo advance info
      * @return {@link Page} with {@link ConfigInfo} generation
      */
-    Page<ConfigInfo> findConfigInfoLike4Page(final int pageNo, final int pageSize, final String dataId,
-            final String group, final String tenant, final Map<String, Object> configAdvanceInfo);
+    Page<ConfigInfo> findConfigInfoLike4Page(final int pageNo, final int pageSize,
+        final String dataId,
+        final String group, final String tenant, final Map<String, Object> configAdvanceInfo);
     
     /**
-     * Fuzzy query configuration information based on dataId and group.
-     *
-     * @param pageNo   Page number (must be greater than 0)
-     * @param pageSize Page size (must be greater than 0)
-     * @param dataId   data id
-     * @param group    group
-     * @param content  config content
-     * @return {@link Page} with {@link ConfigInfoBase} generation
-     * @throws IOException exception
-     */
-    Page<ConfigInfoBase> findConfigInfoBaseLike(final int pageNo, final int pageSize, final String dataId,
-            final String group, final String content) throws IOException;
-    
-    /**
-     * Query change config.
+     * Query change config.order by id asc.
      *
      * @param startTime start time
-     * @param endTime   end time
+     * @param lastMaxId lastMaxId
+     * @param pageSize  pageSize
      * @return {@link ConfigInfoWrapper} list
      */
-    List<ConfigInfoWrapper> findChangeConfig(final Timestamp startTime, final Timestamp endTime);
-    
-    /**
-     * According to the time period and configuration conditions to query the eligible configuration.
-     *
-     * @param dataId    dataId Support Fuzzy query
-     * @param group     dataId Support Fuzzy query
-     * @param tenant    tenant
-     * @param appName   app name
-     * @param startTime start time
-     * @param endTime   end time
-     * @param pageNo    pageNo
-     * @param pageSize  pageSize
-     * @param lastMaxId last max id
-     * @return {@link Page} with {@link ConfigInfoWrapper} generation
-     */
-    Page<ConfigInfoWrapper> findChangeConfig(final String dataId, final String group, final String tenant,
-            final String appName, final Timestamp startTime, final Timestamp endTime, final int pageNo,
-            final int pageSize, final long lastMaxId);
+    List<ConfigInfoStateWrapper> findChangeConfig(final Timestamp startTime, long lastMaxId,
+        final int pageSize);
     
     /**
      * Query tag list.
@@ -486,8 +401,11 @@ public interface ConfigInfoPersistService {
      * @param group  group
      * @param tenant tenant
      * @return advance info
+     * @deprecated Unused by current config flows; kept temporarily for repository compatibility.
      */
-    ConfigAdvanceInfo findConfigAdvanceInfo(final String dataId, final String group, final String tenant);
+    @Deprecated
+    ConfigAdvanceInfo findConfigAdvanceInfo(final String dataId, final String group,
+        final String tenant);
     
     /**
      * Query configuration information; database atomic operation, minimum SQL action, no business encapsulation.
@@ -500,49 +418,6 @@ public interface ConfigInfoPersistService {
     ConfigAllInfo findConfigAllInfo(final String dataId, final String group, final String tenant);
     
     /**
-     * Convert delete config.
-     *
-     * @param list origin data
-     * @return {@link ConfigInfo} list
-     */
-    List<ConfigInfo> convertDeletedConfig(List<Map<String, Object>> list);
-    
-    /**
-     * Convert change config.
-     *
-     * @param list origin data
-     * @return {@link ConfigInfoWrapper} list
-     */
-    List<ConfigInfoWrapper> convertChangeConfig(List<Map<String, Object>> list);
-    
-    
-    /**
-     * Get the Md5 value of all configurations, through the paging method.
-     *
-     * @return {@link ConfigInfoWrapper} list
-     */
-    List<ConfigInfoWrapper> listAllGroupKeyMd5();
-    
-    /**
-     * list group key md5 by page.
-     *
-     * @param pageNo   page no
-     * @param pageSize page size
-     * @return {@link ConfigInfoWrapper} list
-     */
-    List<ConfigInfoWrapper> listGroupKeyMd5ByPage(int pageNo, int pageSize);
-    
-    /**
-     * Query config info.
-     *
-     * @param dataId data id
-     * @param group  group
-     * @param tenant tenant
-     * @return {@link ConfigInfoWrapper}
-     */
-    ConfigInfoWrapper queryConfigInfo(final String dataId, final String group, final String tenant);
-    
-    /**
      * get config info state.
      *
      * @param dataId dataId.
@@ -550,7 +425,8 @@ public interface ConfigInfoPersistService {
      * @param tenant tenant.
      * @return config info state.
      */
-    ConfigInfoStateWrapper findConfigInfoState(final String dataId, final String group, final String tenant);
+    ConfigInfoStateWrapper findConfigInfoState(final String dataId, final String group,
+        final String tenant);
     
     /**
      * query all configuration information according to group, appName, tenant (for export).
@@ -562,8 +438,9 @@ public interface ConfigInfoPersistService {
      * @param ids     ids
      * @return Collection of ConfigInfo objects
      */
-    List<ConfigAllInfo> findAllConfigInfo4Export(final String dataId, final String group, final String tenant,
-            final String appName, final List<Long> ids);
+    List<ConfigAllInfo> findAllConfigInfo4Export(final String dataId, final String group,
+        final String tenant,
+        final String appName, final List<Long> ids);
     
     /**
      * Query dataId list by namespace.
@@ -572,15 +449,5 @@ public interface ConfigInfoPersistService {
      * @return {@link ConfigInfoBase}
      */
     List<ConfigInfoWrapper> queryConfigInfoByNamespace(final String tenantId);
-    
-    /**
-     * Query all configuration information by page.
-     *
-     * @param pageNo   Page number (starting at 1)
-     * @param pageSize Page size (must be greater than 0)
-     * @return {@link Page} with {@link ConfigInfoBase} generation
-     */
-    @Deprecated
-    Page<ConfigInfoBase> findAllConfigInfoBase(final int pageNo, final int pageSize);
     
 }

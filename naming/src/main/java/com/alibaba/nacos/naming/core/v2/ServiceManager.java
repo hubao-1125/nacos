@@ -59,13 +59,13 @@ public class ServiceManager {
      * @return if service is exist, return exist service, otherwise return new service
      */
     public Service getSingleton(Service service) {
-        singletonRepository.computeIfAbsent(service, key -> {
+        Service result = singletonRepository.computeIfAbsent(service, key -> {
             NotifyCenter.publishEvent(new MetadataEvent.ServiceMetadataEvent(service, false));
             return service;
         });
-        Service result = singletonRepository.get(service);
-        namespaceSingletonMaps.computeIfAbsent(result.getNamespace(), namespace -> new ConcurrentHashSet<>());
-        namespaceSingletonMaps.get(result.getNamespace()).add(result);
+        namespaceSingletonMaps
+            .computeIfAbsent(result.getNamespace(), namespace -> new ConcurrentHashSet<>())
+            .add(result);
         return result;
     }
     
@@ -102,8 +102,9 @@ public class ServiceManager {
      * @return removed service
      */
     public Service removeSingleton(Service service) {
-        if (namespaceSingletonMaps.containsKey(service.getNamespace())) {
-            namespaceSingletonMaps.get(service.getNamespace()).remove(service);
+        Set<Service> services = namespaceSingletonMaps.get(service.getNamespace());
+        if (services != null) {
+            services.remove(service);
         }
         return singletonRepository.remove(service);
     }

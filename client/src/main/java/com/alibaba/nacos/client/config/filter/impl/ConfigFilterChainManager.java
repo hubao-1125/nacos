@@ -35,7 +35,7 @@ import java.util.ServiceLoader;
 public class ConfigFilterChainManager implements IConfigFilterChain {
     
     private final List<IConfigFilter> filters = new ArrayList<>();
-
+    
     private final Properties initProperty;
     
     public ConfigFilterChainManager(Properties properties) {
@@ -92,7 +92,8 @@ public class ConfigFilterChainManager implements IConfigFilterChain {
         }
         
         @Override
-        public void doFilter(final IConfigRequest request, final IConfigResponse response) throws NacosException {
+        public void doFilter(final IConfigRequest request, final IConfigResponse response)
+            throws NacosException {
             if (this.currentPosition != this.additionalFilters.size()) {
                 this.currentPosition++;
                 IConfigFilter nextFilter = this.additionalFilters.get(this.currentPosition - 1);

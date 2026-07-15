@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2020 Alibaba Group Holding Ltd.
+ * Copyright 1999-2023 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,11 @@ package com.alibaba.nacos.core.remote;
 
 import com.alibaba.nacos.common.remote.ConnectionType;
 import com.alibaba.nacos.common.remote.PayloadRegistry;
-import com.alibaba.nacos.common.utils.JacksonUtils;
+import com.alibaba.nacos.core.remote.tls.RpcServerSslContextRefresherHolder;
 import com.alibaba.nacos.core.utils.Loggers;
 import com.alibaba.nacos.sys.env.EnvUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 /**
  * abstract rpc server .
@@ -38,27 +36,26 @@ public abstract class BaseRpcServer {
         PayloadRegistry.init();
     }
     
-    @Autowired
-    protected RpcServerTlsConfig rpcServerTlsConfig;
-    
     /**
      * Start sever.
      */
     @PostConstruct
     public void start() throws Exception {
         String serverName = getClass().getSimpleName();
-        String tlsConfig = JacksonUtils.toJson(rpcServerTlsConfig);
-        Loggers.REMOTE.info("Nacos {} Rpc server starting at port {} and tls config:{}", serverName, getServicePort(),
-                tlsConfig);
+        Loggers.REMOTE.info("Nacos {} Rpc server starting at port {}", serverName,
+            getServicePort());
         
         startServer();
         
-        if (RpcServerSslContextRefresherHolder.getInstance() != null) {
-            RpcServerSslContextRefresherHolder.getInstance().refresh(this);
+        if (RpcServerSslContextRefresherHolder.getSdkInstance() != null) {
+            RpcServerSslContextRefresherHolder.getSdkInstance().refresh(this);
         }
         
-        Loggers.REMOTE.info("Nacos {} Rpc server started at port {} and tls config:{}", serverName, getServicePort(),
-                tlsConfig);
+        if (RpcServerSslContextRefresherHolder.getClusterInstance() != null) {
+            RpcServerSslContextRefresherHolder.getClusterInstance().refresh(this);
+        }
+        
+        Loggers.REMOTE.info("Nacos {} Rpc server started at port {}", serverName, getServicePort());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Loggers.REMOTE.info("Nacos {} Rpc server stopping", serverName);
             try {
@@ -78,18 +75,15 @@ public abstract class BaseRpcServer {
      */
     public abstract ConnectionType getConnectionType();
     
-    public RpcServerTlsConfig getRpcServerTlsConfig() {
-        return rpcServerTlsConfig;
-    }
-    
-    public void setRpcServerTlsConfig(RpcServerTlsConfig rpcServerTlsConfig) {
-        this.rpcServerTlsConfig = rpcServerTlsConfig;
-    }
-    
     /**
-     * reload ssl context.
+     * Reload protocol context if necessary.
+     *
+     * <p>
+     * protocol like:
+     * <li>Tls</li>
+     * </p>
      */
-    public abstract void reloadSslContext();
+    public abstract void reloadProtocolContext();
     
     /**
      * Start sever.

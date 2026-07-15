@@ -35,7 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class NamingDynamicMeterRefreshService {
     
-    private static final String TOPN_SERVICE_CHANGE_REGISTRY = NacosMeterRegistryCenter.TOPN_SERVICE_CHANGE_REGISTRY;
+    private static final String TOPN_SERVICE_CHANGE_REGISTRY =
+        NacosMeterRegistryCenter.TOPN_SERVICE_CHANGE_REGISTRY;
     
     private static final int SERVICE_CHANGE_N = 10;
     
@@ -43,14 +44,17 @@ public class NamingDynamicMeterRefreshService {
      * refresh service change count top n per 30s.
      */
     @Scheduled(cron = "0/30 * * * * *")
-    public void refreshTopnConfigChangeCount() {
+    public void refreshTopnServiceChangeCount() {
         NacosMeterRegistryCenter.clear(TOPN_SERVICE_CHANGE_REGISTRY);
-        List<Pair<String, AtomicInteger>> topnServiceChangeCount = MetricsMonitor.getServiceChangeCount()
-                .getTopNCounter(SERVICE_CHANGE_N);
+        List<Pair<String, AtomicInteger>> topnServiceChangeCount =
+            MetricsMonitor.getServiceChangeCount()
+                .getCounterOfTopN(SERVICE_CHANGE_N);
         for (Pair<String, AtomicInteger> serviceChangeCount : topnServiceChangeCount) {
             List<Tag> tags = new ArrayList<>();
             tags.add(new ImmutableTag("service", serviceChangeCount.getFirst()));
-            NacosMeterRegistryCenter.gauge(TOPN_SERVICE_CHANGE_REGISTRY, "service_change_count", tags, serviceChangeCount.getSecond());
+            NacosMeterRegistryCenter
+                .gauge(TOPN_SERVICE_CHANGE_REGISTRY, "service_change_count", tags,
+                    serviceChangeCount.getSecond());
         }
     }
     
@@ -59,6 +63,6 @@ public class NamingDynamicMeterRefreshService {
      */
     @Scheduled(cron = "0 0 0 ? * 1")
     public void resetTopnServiceChangeCount() {
-        MetricsMonitor.getServiceChangeCount().removeAll();
+        MetricsMonitor.getServiceChangeCount().reset();
     }
 }

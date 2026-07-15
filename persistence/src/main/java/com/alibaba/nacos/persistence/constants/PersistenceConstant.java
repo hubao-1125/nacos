@@ -25,11 +25,6 @@ public class PersistenceConstant {
     
     public static final String DEFAULT_ENCODE = "UTF-8";
     
-    /**
-     * May be removed with the upgrade of springboot version.
-     */
-    public static final String DATASOURCE_PLATFORM_PROPERTY_OLD = "spring.datasource.platform";
-    
     public static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
     
     public static final String MYSQL = "mysql";
@@ -51,4 +46,5 @@ public class PersistenceConstant {
     public static final String EXTEND_NEED_READ_UNTIL_HAVE_DATA = "00--0-read-join-0--00";
     
     public static final String CONFIG_MODEL_RAFT_GROUP = "nacos_config";
+    
 }

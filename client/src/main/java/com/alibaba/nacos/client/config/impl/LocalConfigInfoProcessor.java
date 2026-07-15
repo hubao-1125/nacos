@@ -17,7 +17,7 @@
 package com.alibaba.nacos.client.config.impl;
 
 import com.alibaba.nacos.api.common.Constants;
-import com.alibaba.nacos.client.config.utils.ConcurrentDiskUtil;
+import com.alibaba.nacos.client.utils.ConcurrentDiskUtil;
 import com.alibaba.nacos.client.config.utils.JvmUtil;
 import com.alibaba.nacos.client.config.utils.SnapShotSwitch;
 import com.alibaba.nacos.client.env.NacosClientProperties;
@@ -59,13 +59,17 @@ public class LocalConfigInfoProcessor {
     private static final String SNAPSHOT_FILE_CHILD_2 = "snapshot-tenant";
     
     static {
-        LOCAL_SNAPSHOT_PATH = NacosClientProperties.PROTOTYPE.getProperty(com.alibaba.nacos.client.constant.Constants.SysEnv.JM_SNAPSHOT_PATH,
-                NacosClientProperties.PROTOTYPE.getProperty(com.alibaba.nacos.client.constant.Constants.SysEnv.USER_HOME)) + File.separator
-                + "nacos" + File.separator + "config";
+        LOCAL_SNAPSHOT_PATH = NacosClientProperties.PROTOTYPE.getProperty(
+            com.alibaba.nacos.client.constant.Constants.SysEnv.JM_SNAPSHOT_PATH,
+            NacosClientProperties.PROTOTYPE
+                .getProperty(com.alibaba.nacos.client.constant.Constants.SysEnv.USER_HOME))
+            + File.separator
+            + "nacos" + File.separator + "config";
         LOGGER.info("LOCAL_SNAPSHOT_PATH:{}", LOCAL_SNAPSHOT_PATH);
     }
     
-    public static String getFailover(String serverName, String dataId, String group, String tenant) {
+    public static String getFailover(String serverName, String dataId, String group,
+        String tenant) {
         File localPath = getFailoverFile(serverName, dataId, group, tenant);
         if (!localPath.exists() || !localPath.isFile()) {
             return null;
@@ -122,7 +126,8 @@ public class LocalConfigInfoProcessor {
      * @param tenant  tenant
      * @param config  config
      */
-    public static void saveSnapshot(String envName, String dataId, String group, String tenant, String config) {
+    public static void saveSnapshot(String envName, String dataId, String group, String tenant,
+        String config) {
         if (!SnapShotSwitch.getIsSnapShot()) {
             return;
         }

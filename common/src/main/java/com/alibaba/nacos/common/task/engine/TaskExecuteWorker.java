@@ -54,7 +54,8 @@ public final class TaskExecuteWorker implements NacosTaskProcessor, Closeable {
         this(name, mod, total, null);
     }
     
-    public TaskExecuteWorker(final String name, final int mod, final int total, final Logger logger) {
+    public TaskExecuteWorker(final String name, final int mod, final int total,
+        final Logger logger) {
         this.name = name + "_" + mod + "%" + total;
         this.queue = new ArrayBlockingQueue<>(QUEUE_CAPACITY);
         this.closed = new AtomicBoolean(false);
@@ -91,7 +92,7 @@ public final class TaskExecuteWorker implements NacosTaskProcessor, Closeable {
      * Worker status.
      */
     public String status() {
-        return name + ", pending tasks: " + pendingTaskCount();
+        return getName() + ", pending tasks: " + pendingTaskCount();
     }
     
     @Override
@@ -122,6 +123,8 @@ public final class TaskExecuteWorker implements NacosTaskProcessor, Closeable {
                     if (duration > 1000L) {
                         log.warn("task {} takes {}ms", task, duration);
                     }
+                } catch (InterruptedException e) {
+                    // [issue #13752] ignore stack log
                 } catch (Throwable e) {
                     log.error("[TASK-FAILED] " + e, e);
                 }
